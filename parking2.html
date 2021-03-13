@@ -1,0 +1,107 @@
+<html>
+
+<head>
+    <title>parkIn</title>
+    <meta charset="utf-8" />
+</head>
+<style>
+    .col-1 {
+        width: 15%;
+        margin-left: 10px;
+        height: 350px;
+        padding: 2px;
+    }
+
+    .rect {
+        width: 200px !important;
+        height: 480px;
+        margin: 20px 20px;
+        display: flex;
+        flex-shrink: 0;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-y: scroll;
+    }
+
+    .slot {
+        display: flex;
+        flex-direction: row;
+        overflow-x: scroll;
+
+    }
+</style>
+
+<body onload="viewCreate()">
+
+    <div class="slot" id="content">
+    </div>
+
+</body>
+<script language="javascript">
+    let slots = [];
+    let firstSlots = [];
+    function viewCreate() {
+        fetchAndSetup();
+        setInterval(fetchAndSetup, 1000);
+    }
+
+    function fetchAndSetup() {
+        fetch("http://localhost:5000").then(succ => {
+            return succ.json();
+        }).then(apiSlots => {
+
+            document.getElementById('content').innerHTML = "";
+            for (const slot of apiSlots) {
+                const oldSlot = firstSlots.find(s => s.id === slot.id);
+                if (oldSlot) {
+                    if(oldSlot.color.toLowerCase() !== slot.color.toLowerCase()){
+                        oldSlot.text += "<br> " + slot.text;
+                    }
+                    if (slot.color.toLowerCase() === 'green') {
+                        createGreenBox(oldSlot);
+                    }
+                    else if (slot.color.toLowerCase() === 'red') {
+                        createRedBox(oldSlot);
+                    }
+                    firstSlots.some(s => {
+                        if (s.id === slot.id) {
+                            s.text = oldSlot.text;
+                            s.color = slot.color;
+                        }
+                        return false;
+                    })
+                }
+                else {
+                    if (slot.color.toLowerCase() === 'green') {
+                        createGreenBox(slot);
+                    }
+                    else if (slot.color.toLowerCase() === 'red') {
+                        createRedBox(slot);
+                    }
+                    firstSlots.push(slot);
+                }
+            }
+            slots = apiSlots;
+
+        })
+
+    }
+
+    function createRedBox(slot) {
+        var div = document.createElement('div');
+        div.className = 'rect';
+        div.innerHTML += slot.text;
+        div.style.backgroundColor = '#fa1407';
+        document.getElementById('content').appendChild(div);
+    }
+
+    function createGreenBox(slot) {
+        var div = document.createElement('div');
+        div.className = 'rect';
+        div.innerHTML += slot.text;
+        div.style.backgroundColor = '#1ccc08';
+        document.getElementById('content').appendChild(div);
+    }
+</script>
+
+</html>

@@ -1,0 +1,127 @@
+<html>
+
+<head>
+    <title>parkIn</title>
+    <meta charset="utf-8" />
+</head>
+<style>
+    .col-1 {
+        width: 15%;
+        margin-left: 10px;
+        height: 350px;
+        padding: 2px;
+    }
+
+    .rect {
+        width: 200px !important;
+        height: 480px;
+        margin: 20px 20px;
+        display: flex;
+        flex-shrink: 0;
+        overflow-y: scroll;
+        padding-right: 20px;
+        flex-direction: column;
+        /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
+    }
+
+    .slot {
+        display: flex;
+        flex-direction: row;
+        overflow-x: scroll;
+
+    }
+
+    .info-block {
+        max-width: 200px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+</style>
+
+<body onload="viewCreate()">
+
+    <div class="slot" id="content">
+    </div>
+
+</body>
+<script language="javascript">
+    let slots = [];
+    let firstSlots = [];
+    function viewCreate() {
+        fetchAndSetup();
+        setInterval(fetchAndSetup, 1000);
+    }
+
+    function fetchAndSetup() {
+        fetch("http://localhost:5000").then(succ => {
+            return succ.json();
+        }).then(apiSlots => {
+
+            document.getElementById('content').innerHTML = "";
+            for (const slot of apiSlots) {
+                const oldSlot = firstSlots.find(s => s.id === slot.id);
+                if (oldSlot) {
+                    console.log('oldSlot ', oldSlot.color, 'slot ', slot.color);
+                    if (oldSlot.color.toLowerCase() !== slot.color.toLowerCase()) {
+                        console.log('color dont match', oldSlot.text);
+                        oldSlot.text += "<br>" + "<div class='info-block'>"+slot.text + "</div>";
+                        console.log('new text', slot.text);
+                    }
+                    if (slot.color.toLowerCase() === 'green') {
+                        createGreenBox(oldSlot);
+                    }
+                    else if (slot.color.toLowerCase() === 'red') {
+                        createRedBox(oldSlot);
+                    }
+                    firstSlots.some(s => {
+                        if (s.id === slot.id) {
+                            s.text = oldSlot.text;
+                            s.color = slot.color;
+                        }
+                        return false;
+                    });
+                    console.log('updated first slot', firstSlots.find(s => s.id === slot.id));
+                }
+                else {
+                    console.log('adding new slot');
+                    const newtext = "<div class='info-block'>"+slot.text + "</div>";
+                    slot.text = newtext;
+                    if (slot.color.toLowerCase() === 'green') {
+                        createGreenBox(slot);
+                    }
+                    else if (slot.color.toLowerCase() === 'red') {
+                        createRedBox(slot);
+                    }
+                    firstSlots.push(slot);
+                }
+            }
+            slots = apiSlots;
+            // for (let i = 0; i < 20; i++) {
+            //     if (i % 2 == 0) {
+            //         createGreenBox();
+            //     } else {
+            //         createRedBox();
+            //     }
+            // }
+        })
+
+    }
+
+    function createRedBox(slot) {
+        var div = document.createElement('div');
+        div.className = 'rect';
+        div.innerHTML += slot.text;
+        div.style.backgroundColor = '#fa1407';
+        document.getElementById('content').appendChild(div);
+    }
+
+    function createGreenBox(slot) {
+        var div = document.createElement('div');
+        div.className = 'rect';
+        div.innerHTML += slot.text;
+        div.style.backgroundColor = '#1ccc08';
+        document.getElementById('content').appendChild(div);
+    }
+</script>
+</html>
